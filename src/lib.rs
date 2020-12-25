@@ -87,23 +87,25 @@ fn keyval_hashmap_to_wordprediction_hashmap(
     unique_words
         .par_iter()
         .map(|first_word| {
-            let mut second_word_scores: Vec<&WordScore> = predictions
-                .iter()
-                .filter(|word_score| word_score.word == *first_word)
-                .collect();
-            second_word_scores.sort_by(|a, b| b.score.cmp(&a.score));
-            (
-                first_word.to_string(),
-                WordPredictions {
-                    word: first_word.to_string(),
-                    predictions: second_word_scores
-                        .iter()
-                        .map(|word_score| (word_score.second_word.clone(), word_score.score))
-                        .collect(),
-                },
-            )
+            let word_grouped = group_word_scores(first_word, &predictions);
+            (first_word.to_string(), word_grouped)
         })
         .collect()
+}
+
+fn group_word_scores(first_word: &str, predictions: &[WordScore]) -> WordPredictions {
+    let mut second_word_scores: Vec<&WordScore> = predictions
+        .iter()
+        .filter(|word_score| word_score.word == *first_word)
+        .collect();
+    second_word_scores.sort_by(|a, b| b.score.cmp(&a.score));
+    WordPredictions {
+        word: first_word.to_string(),
+        predictions: second_word_scores
+            .iter()
+            .map(|word_score| (word_score.second_word.clone(), word_score.score))
+            .collect(),
+    }
 }
 
 #[cfg(test)]
