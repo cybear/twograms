@@ -10,3 +10,10 @@ Twograms is an n-grams implementation in Rust with the following limitations:
 - Only the English alphabet is currently supported.
 - Not yet exporting to Webassembly
 - Not tested on large bodies of text. I imagine that, say, only the top 5 predictions are useful to keep for most use cases
+- Currently I'm unsure how to expose the API.
+
+Test data
+
+- A chapter from Alice in Wonderland
+- The Bible, King James edition from http://www.gutenberg.org/files/10900/10900-8.txt
+
