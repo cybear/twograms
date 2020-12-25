@@ -1,5 +1,6 @@
 #![feature(map_into_keys_values)]
 use std::collections::HashMap;
+use rayon::prelude::*;
 use regex::Regex;
 use std::fmt;
 
@@ -65,35 +66,32 @@ fn get_unique_words(words: &Vec<String>) -> Vec<String> {
 }
 
 fn keyval_hashmap_to_wordprediction_hashmap(unique_words: Vec<String>, predictions_map: HashMap<String, usize>) -> HashMap<String, WordPredictions> {
-    let mut hm: HashMap<String, WordPredictions> = HashMap::new();
     println!("Generating word predictions for {} words", unique_words.len());
-    unique_words.iter().for_each(|first_word| {
-        let prefix = format!("{}§", first_word);
-        let second_word_keys = predictions_map
-            .keys()
-            .filter(|word| word.starts_with(&prefix));
-        let mut second_word_scores: Vec<(String, usize)> = second_word_keys
-            .map(|key| {
-                let mut split = key.split("§");
-                split.next();
-                let second_word = split.next().unwrap();
-                (second_word.to_string(), predictions_map.get(key).unwrap().clone())}
-            )
-            .collect();
-        second_word_scores.sort_by(|a, b| b.1.cmp(&a.1));
-        let w = WordPredictions {
-            word: first_word.to_string(),
-            predictions: second_word_scores,
-        };
-        hm.insert(first_word.to_string(), w);
-    });
-    hm
-}
-
-fn keyval_hashmap_to_wordpredictions_array(unique_words: Vec<String>, predictions_map: HashMap<String, usize>) -> Vec<WordPredictions> {
-    keyval_hashmap_to_wordprediction_hashmap(unique_words, predictions_map)
-        .into_values()
-        .collect()
+    let wordz: HashMap<String, WordPredictions> = unique_words
+        .par_iter()
+        .map(|first_word| {
+            let prefix = format!("{}§", first_word);
+            let second_word_keys = predictions_map
+                .keys()
+                .filter(|word| word.starts_with(&prefix));
+            let mut second_word_scores: Vec<(String, usize)> = second_word_keys
+                .map(|key| {
+                    let mut split = key.split("§");
+                    split.next();
+                    let second_word = split.next().unwrap();
+                    (second_word.to_string(), predictions_map.get(key).unwrap().clone())}
+                )
+                .collect();
+            second_word_scores.sort_by(|a, b| b.1.cmp(&a.1));
+            (
+                first_word.to_string(),
+                WordPredictions {
+                word: first_word.to_string(),
+                predictions: second_word_scores,
+            })
+        })
+        .collect();
+    wordz
 }
 
 #[cfg(test)]
@@ -152,6 +150,7 @@ fn test_bible_parser() {
     let two_grams_score_above_1 = clean_scores(two_grams, 2);
     let word_predictions = keyval_hashmap_to_wordprediction_hashmap(unique_words, two_grams_score_above_1);
     let word_a = word_predictions.get("a").unwrap();
+    // println!("{}", word_a);
     assert_eq!(word_a.word, "a");
     assert_eq!(word_a.predictions.len(), 795);
 }
