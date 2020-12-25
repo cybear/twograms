@@ -61,7 +61,8 @@ fn keyval_hashmap_to_wordpredictions(unique_words: Vec<String>, predictions_map:
     println!("Generating word predictions for {} words", unique_words.len());
     unique_words.iter().map(|first_word| {
         let prefix = format!("{}§", first_word);
-        let second_word_keys = predictions_map.keys()
+        let second_word_keys = predictions_map
+            .keys()
             .filter(|word| word.starts_with(&prefix));
         let mut second_word_scores: Vec<(String, usize)> = second_word_keys
             .map(|key| {
@@ -129,13 +130,13 @@ fn test_alice() {
     assert_eq!(word_predictions.len(), 610);
 }
 
-// #[test]
-// fn test_bible_parser() {
-//     let words = parse_file(include_str!("10900-8.txt"));
-//     let unique_words = get_unique_words(&words);
-//     let two_grams = generate_scores(&words);
-//     let word_predictions = keyval_hashmap_to_wordpredictions(unique_words, two_grams);
-//     println!("{}", word_predictions[0]);
-//     assert_eq!(words.len(), 858338);
-// }
+#[test]
+fn test_bible_parser() {
+    let words = parse_file(include_str!("10900-8.txt"));
+    let unique_words = get_unique_words(&words);
+    let two_grams = generate_scores(&words);
+    let word_predictions = keyval_hashmap_to_wordpredictions(unique_words, two_grams);
+    println!("{}", word_predictions[0]);
+    assert_eq!(words.len(), 858338);
+}
 }
