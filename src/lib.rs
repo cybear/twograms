@@ -125,15 +125,6 @@ fn test_parse_file() {
 }
 
 #[test]
-fn test_generate_n_grams() {
-    let words = parse_file(TESTDATA);
-    let two_grams = generate_scores(&words);
-    assert_eq!(two_grams[0].word, "i");
-    assert_eq!(two_grams[0].second_word, "am");
-    assert_eq!(two_grams[0].score, 2);
-}
-
-#[test]
 fn test_alice() {
     let words = parse_file(include_str!("alice.txt"));
     let unique_words = get_unique_words(&words);
@@ -154,6 +145,6 @@ fn test_bible_parser() {
     let word_predictions = keyval_hashmap_to_wordprediction_hashmap(unique_words, two_grams);
     let word_a = word_predictions.get("a").unwrap();
     assert_eq!(word_a.word, "a");
-    assert_eq!(word_a.predictions.len(), 795);
+    assert_eq!(word_a.predictions.len(), 1335);
 }
 }
