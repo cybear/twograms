@@ -71,12 +71,6 @@ fn prediction_tuple_to_word_score(key: &String, score: usize) -> WordScore {
         }
 }
 
-// fn clean_scores(map: HashMap<String, usize>, minimum: usize) -> HashMap<String, usize> {
-//     map.into_iter()
-//         .filter(|&(_, v)| v >= minimum)
-//         .collect()
-// }
-
 fn get_unique_words(words: &Vec<String>) -> Vec<String> {
     println!("Deduping {} words", words.len());
     let mut words_sorted = words.clone();
