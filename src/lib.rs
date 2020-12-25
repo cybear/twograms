@@ -1,3 +1,4 @@
+#![feature(map_into_keys_values)]
 use std::collections::HashMap;
 use regex::Regex;
 use std::fmt;
@@ -49,6 +50,12 @@ fn generate_scores(words: &[String]) -> HashMap<String, usize> {
     prediction_map
 }
 
+fn clean_scores(map: HashMap<String, usize>, minimum: usize) -> HashMap<String, usize> {
+    map.into_iter()
+        .filter(|&(_, v)| v >= minimum)
+        .collect()
+}
+
 fn get_unique_words(words: &Vec<String>) -> Vec<String> {
     println!("Deduping {} words", words.len());
     let mut words_sorted = words.clone();
@@ -57,9 +64,10 @@ fn get_unique_words(words: &Vec<String>) -> Vec<String> {
     words_sorted
 }
 
-fn keyval_hashmap_to_wordpredictions(unique_words: Vec<String>, predictions_map: HashMap<String, usize>) -> Vec<WordPredictions> {
+fn keyval_hashmap_to_wordprediction_hashmap(unique_words: Vec<String>, predictions_map: HashMap<String, usize>) -> HashMap<String, WordPredictions> {
+    let mut hm: HashMap<String, WordPredictions> = HashMap::new();
     println!("Generating word predictions for {} words", unique_words.len());
-    unique_words.iter().map(|first_word| {
+    unique_words.iter().for_each(|first_word| {
         let prefix = format!("{}§", first_word);
         let second_word_keys = predictions_map
             .keys()
@@ -77,9 +85,15 @@ fn keyval_hashmap_to_wordpredictions(unique_words: Vec<String>, predictions_map:
             word: first_word.to_string(),
             predictions: second_word_scores,
         };
-        println!("Generated word: {}", w);
-        w
-    }).collect()
+        hm.insert(first_word.to_string(), w);
+    });
+    hm
+}
+
+fn keyval_hashmap_to_wordpredictions_array(unique_words: Vec<String>, predictions_map: HashMap<String, usize>) -> Vec<WordPredictions> {
+    keyval_hashmap_to_wordprediction_hashmap(unique_words, predictions_map)
+        .into_values()
+        .collect()
 }
 
 #[cfg(test)]
@@ -106,37 +120,39 @@ fn test_generate_n_grams() {
 }
 
 #[test]
-fn test_keyval_hashmap_to_wordpredictions() {
-    let words = parse_file(TESTDATA);
-    let unique_words = get_unique_words(&words);
-    let two_grams = generate_scores(&words);
-    let word_predictions = keyval_hashmap_to_wordpredictions(unique_words, two_grams);
-    assert_eq!(word_predictions.len(), 7);
-    assert_eq!(word_predictions[0].word, "a");
-    assert_eq!(word_predictions[1].word, "am");
-}
-
-#[test]
 fn test_alice() {
     let words = parse_file(include_str!("alice.txt"));
     let unique_words = get_unique_words(&words);
     let two_grams = generate_scores(&words);
-    let word_predictions = keyval_hashmap_to_wordpredictions(unique_words, two_grams);
-    println!("{}", word_predictions[0]);
-    println!("{}", word_predictions[1]);
-    println!("{}", word_predictions[2]);
-    assert_eq!(word_predictions[0].word, "a");
-    assert_eq!(word_predictions[0].predictions.len(), 37);    
+    let word_predictions = keyval_hashmap_to_wordprediction_hashmap(unique_words, two_grams);
+    let word_a = word_predictions.get("a").unwrap();
+    assert_eq!(word_a.word, "a");
+    assert_eq!(word_a.predictions.len(), 37);    
+    assert_eq!(word_predictions.len(), 610);
+}
+
+#[test]
+fn test_alice_hm() {
+    let words = parse_file(include_str!("alice.txt"));
+    let unique_words = get_unique_words(&words);
+    let two_grams = generate_scores(&words);
+    let word_predictions = keyval_hashmap_to_wordprediction_hashmap(unique_words, two_grams);
+    let word_a = word_predictions.get("a").unwrap();
+    assert_eq!(word_a.word, "a");
+    assert_eq!(word_a.predictions.len(), 37);
     assert_eq!(word_predictions.len(), 610);
 }
 
 #[test]
 fn test_bible_parser() {
     let words = parse_file(include_str!("10900-8.txt"));
+    assert_eq!(words.len(), 858338);
     let unique_words = get_unique_words(&words);
     let two_grams = generate_scores(&words);
-    let word_predictions = keyval_hashmap_to_wordpredictions(unique_words, two_grams);
-    println!("{}", word_predictions[0]);
-    assert_eq!(words.len(), 858338);
+    let two_grams_score_above_1 = clean_scores(two_grams, 2);
+    let word_predictions = keyval_hashmap_to_wordprediction_hashmap(unique_words, two_grams_score_above_1);
+    let word_a = word_predictions.get("a").unwrap();
+    assert_eq!(word_a.word, "a");
+    assert_eq!(word_a.predictions.len(), 795);
 }
 }
