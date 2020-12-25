@@ -67,7 +67,7 @@ fn get_unique_words(words: &Vec<String>) -> Vec<String> {
 
 fn keyval_hashmap_to_wordprediction_hashmap(unique_words: Vec<String>, predictions_map: HashMap<String, usize>) -> HashMap<String, WordPredictions> {
     println!("Generating word predictions for {} words", unique_words.len());
-    let wordz: HashMap<String, WordPredictions> = unique_words
+    unique_words
         .par_iter()
         .map(|first_word| {
             let prefix = format!("{}§", first_word);
@@ -90,8 +90,7 @@ fn keyval_hashmap_to_wordprediction_hashmap(unique_words: Vec<String>, predictio
                 predictions: second_word_scores,
             })
         })
-        .collect();
-    wordz
+        .collect()
 }
 
 #[cfg(test)]
@@ -150,7 +149,6 @@ fn test_bible_parser() {
     let two_grams_score_above_1 = clean_scores(two_grams, 2);
     let word_predictions = keyval_hashmap_to_wordprediction_hashmap(unique_words, two_grams_score_above_1);
     let word_a = word_predictions.get("a").unwrap();
-    // println!("{}", word_a);
     assert_eq!(word_a.word, "a");
     assert_eq!(word_a.predictions.len(), 795);
 }
