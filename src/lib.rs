@@ -146,18 +146,6 @@ fn test_alice() {
 }
 
 #[test]
-fn test_alice_hm() {
-    let words = parse_file(include_str!("alice.txt"));
-    let unique_words = get_unique_words(&words);
-    let two_grams = generate_scores(&words);
-    let word_predictions = keyval_hashmap_to_wordprediction_hashmap(unique_words, two_grams);
-    let word_a = word_predictions.get("a").unwrap();
-    assert_eq!(word_a.word, "a");
-    assert_eq!(word_a.predictions.len(), 37);
-    assert_eq!(word_predictions.len(), 610);
-}
-
-#[test]
 fn test_bible_parser() {
     let words = parse_file(include_str!("10900-8.txt"));
     assert_eq!(words.len(), 858338);
