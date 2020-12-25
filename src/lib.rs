@@ -43,6 +43,12 @@ pub fn parse_file(s: &str) -> Vec<String> {
         .collect()
 }
 
+pub fn get_wordpredictions(words: &[String]) -> HashMap<String, WordPredictions> {
+    let unique_words = get_unique_words(&words);
+    let two_grams = generate_scores(&words);
+    predictions_to_wordprediction_hashmap(unique_words, two_grams)
+}
+
 fn generate_scores(words: &[String]) -> Vec<WordScore> {
     println!("Generating scores for {} sequences", words.len());
     let mut prediction_map: HashMap<String, usize> = HashMap::new();
@@ -71,12 +77,12 @@ fn prediction_tuple_to_word_score(item: (&String, &usize)) -> WordScore {
 fn get_unique_words(words: &[String]) -> Vec<String> {
     println!("Deduping {} words", words.len());
     let mut words_sorted = words.to_owned();
-    words_sorted.sort();
+    words_sorted.sort_unstable();
     words_sorted.dedup();
     words_sorted
 }
 
-fn keyval_hashmap_to_wordprediction_hashmap(
+fn predictions_to_wordprediction_hashmap(
     unique_words: Vec<String>,
     predictions: Vec<WordScore>,
 ) -> HashMap<String, WordPredictions> {
@@ -125,7 +131,7 @@ mod tests {
         let words = parse_file(include_str!("alice.txt"));
         let unique_words = get_unique_words(&words);
         let two_grams = generate_scores(&words);
-        let word_predictions = keyval_hashmap_to_wordprediction_hashmap(unique_words, two_grams);
+        let word_predictions = predictions_to_wordprediction_hashmap(unique_words, two_grams);
         let word_a = word_predictions.get("a").unwrap();
         assert_eq!(word_a.word, "a");
         assert_eq!(word_a.predictions.len(), 37);
@@ -136,9 +142,7 @@ mod tests {
     fn test_bible_parser() {
         let words = parse_file(include_str!("10900-8.txt"));
         assert_eq!(words.len(), 858338);
-        let unique_words = get_unique_words(&words);
-        let two_grams = generate_scores(&words);
-        let word_predictions = keyval_hashmap_to_wordprediction_hashmap(unique_words, two_grams);
+        let word_predictions = get_wordpredictions(&words);
         let word_a = word_predictions.get("a").unwrap();
         assert_eq!(word_a.word, "a");
         assert_eq!(word_a.predictions.len(), 1335);
