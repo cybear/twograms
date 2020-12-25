@@ -55,20 +55,18 @@ fn generate_scores(words: &[String]) -> Vec<WordScore> {
             |key| *prediction_map.entry(key).or_insert(0) += 1
         );
     // At least only do this ONCE
-    prediction_map.iter().map(|(key, score)| {
-        prediction_tuple_to_word_score(key, *score)
-    }).collect()
+    prediction_map.iter().map(prediction_tuple_to_word_score).collect()
 }
 
-fn prediction_tuple_to_word_score(key: &String, score: usize) -> WordScore {
-    let mut split = key.split("§");
-        let word = split.next().unwrap().to_string();
-        let second_word = split.next().unwrap().to_string();
-        WordScore {
-            word,
-            second_word,
-            score,
-        }
+fn prediction_tuple_to_word_score(item: (&String, &usize)) -> WordScore {
+    let mut split = item.0.split("§");
+    let word = split.next().unwrap().to_string();
+    let second_word = split.next().unwrap().to_string();
+    WordScore {
+        word,
+        second_word,
+        score: *item.1,
+    }
 }
 
 fn get_unique_words(words: &Vec<String>) -> Vec<String> {
