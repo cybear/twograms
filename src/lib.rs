@@ -8,23 +8,27 @@ pub struct WordPredictions {
     word: String,
     predictions: Vec<(String, usize)>,
 }
-struct WordScore {
-    word: String,
-    second_word: String,
-    score: usize,
-}
-
 impl fmt::Display for WordPredictions {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        let predictions = self.predictions
+            .iter()
+            .map(
+                |p| format!("{} ({})", p.0, p.1
+            ))
+            .collect::<Vec<String>>()
+            .join(", ");
         write!(
             f,
             "Word: *{}*. Predictions: {}",
             self.word,
-            self.predictions.iter().map(|p|
-                format!("{} ({})", p.0, p.1)
-            ).collect::<Vec<String>>().join(", "),
+            predictions,
         )
     }
+}
+struct WordScore {
+    word: String,
+    second_word: String,
+    score: usize,
 }
 
 pub fn parse_file(s: &str) -> Vec<String> {
@@ -39,26 +43,32 @@ pub fn parse_file(s: &str) -> Vec<String> {
     ).collect()
 }
 
-fn generate_scores(words: &[String]) -> HashMap<String, WordScore> {
+fn generate_scores(words: &[String]) -> Vec<WordScore> {
     println!("Generating scores for {} sequences", words.len());
     let mut prediction_map: HashMap<String, usize> = HashMap::new();
-    let iter = words.windows(2);
-    let keys = iter.map(|pair| format!("{}§{}", pair[0], pair[1]));
-    for key in keys {
-        *prediction_map.entry(key).or_insert(0) += 1;
-    }
+    words
+        .windows(2)
+        .map(
+            |pair| format!("{}§{}", pair[0], pair[1])
+        )
+        .for_each(
+            |key| *prediction_map.entry(key).or_insert(0) += 1
+        );
     // At least only do this ONCE
     prediction_map.iter().map(|(key, score)| {
-        let mut split = key.split("§");
+        prediction_tuple_to_word_score(key, *score)
+    }).collect()
+}
+
+fn prediction_tuple_to_word_score(key: &String, score: usize) -> WordScore {
+    let mut split = key.split("§");
         let word = split.next().unwrap().to_string();
         let second_word = split.next().unwrap().to_string();
-        let score = *score;
-        (key.to_string(), WordScore {
+        WordScore {
             word,
             second_word,
             score,
-        })
-    }).collect()
+        }
 }
 
 // fn clean_scores(map: HashMap<String, usize>, minimum: usize) -> HashMap<String, usize> {
@@ -77,14 +87,14 @@ fn get_unique_words(words: &Vec<String>) -> Vec<String> {
 
 fn keyval_hashmap_to_wordprediction_hashmap(
     unique_words: Vec<String>,
-    predictions_map: HashMap<String, WordScore>
+    predictions: Vec<WordScore>,
 ) -> HashMap<String, WordPredictions> {
     println!("Generating word predictions for {} words", unique_words.len());
     unique_words
         .par_iter()
         .map(|first_word| {
-            let mut second_word_scores: Vec<&WordScore> = predictions_map
-                .values()
+            let mut second_word_scores: Vec<&WordScore> = predictions
+                .iter()
                 .filter(|word_score| word_score.word == *first_word)
                 .collect();
             second_word_scores.sort_by(|a, b| b.score.cmp(&a.score));
@@ -118,9 +128,9 @@ fn test_parse_file() {
 fn test_generate_n_grams() {
     let words = parse_file(TESTDATA);
     let two_grams = generate_scores(&words);
-    assert_eq!(two_grams.get("i§am").unwrap().word, "i");
-    assert_eq!(two_grams.get("i§am").unwrap().second_word, "am");
-    assert_eq!(two_grams.get("i§am").unwrap().score, 2);
+    assert_eq!(two_grams[0].word, "i");
+    assert_eq!(two_grams[0].second_word, "am");
+    assert_eq!(two_grams[0].score, 2);
 }
 
 #[test]
