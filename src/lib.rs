@@ -1,7 +1,7 @@
 #![feature(map_into_keys_values)]
-use std::collections::HashMap;
 use rayon::prelude::*;
 use regex::Regex;
+use std::collections::HashMap;
 use std::fmt;
 
 pub struct WordPredictions {
@@ -13,15 +13,13 @@ static SEPARATOR: char = '§';
 
 impl fmt::Display for WordPredictions {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        let predictions = self.predictions.iter()
+        let predictions = self
+            .predictions
+            .iter()
             .map(|p| format!("{} ({})", p.0, p.1))
-            .collect::<Vec<String>>().join(", ");
-        write!(
-            f,
-            "Word: *{}*. Predictions: {}",
-            self.word,
-            predictions,
-        )
+            .collect::<Vec<String>>()
+            .join(", ");
+        write!(f, "Word: *{}*. Predictions: {}", self.word, predictions,)
     }
 }
 struct WordScore {
@@ -33,13 +31,16 @@ struct WordScore {
 pub fn parse_file(s: &str) -> Vec<String> {
     println!("Parsing a file of {} characters", s.len());
     let re = Regex::new(r"\w+").unwrap();
-    re.find_iter(s).map(
-        |w| w
-            .as_str()
-            .to_lowercase() // Should this be optional?
-            .replace("_", "") // It's an Alice thing
-            .replace("_", "") // Closing too
-    ).collect()
+    re.find_iter(s)
+        .map(
+            |w| {
+                w.as_str()
+                    .to_lowercase() // Should this be optional?
+                    .replace("_", "") // It's an Alice thing
+                    .replace("_", "")
+            }, // Closing too
+        )
+        .collect()
 }
 
 fn generate_scores(words: &[String]) -> Vec<WordScore> {
@@ -47,13 +48,13 @@ fn generate_scores(words: &[String]) -> Vec<WordScore> {
     let mut prediction_map: HashMap<String, usize> = HashMap::new();
     words
         .windows(2)
-        .map(
-            |pair| format!("{}{}{}", pair[0], SEPARATOR, pair[1])
-        ).for_each(
-            |key| *prediction_map.entry(key).or_insert(0) += 1
-        );
+        .map(|pair| format!("{}{}{}", pair[0], SEPARATOR, pair[1]))
+        .for_each(|key| *prediction_map.entry(key).or_insert(0) += 1);
     // At least only do this ONCE
-    prediction_map.iter().map(prediction_tuple_to_word_score).collect()
+    prediction_map
+        .iter()
+        .map(prediction_tuple_to_word_score)
+        .collect()
 }
 
 fn prediction_tuple_to_word_score(item: (&String, &usize)) -> WordScore {
@@ -79,7 +80,10 @@ fn keyval_hashmap_to_wordprediction_hashmap(
     unique_words: Vec<String>,
     predictions: Vec<WordScore>,
 ) -> HashMap<String, WordPredictions> {
-    println!("Generating word predictions for {} words", unique_words.len());
+    println!(
+        "Generating word predictions for {} words",
+        unique_words.len()
+    );
     unique_words
         .par_iter()
         .map(|first_word| {
@@ -96,7 +100,7 @@ fn keyval_hashmap_to_wordprediction_hashmap(
                         .iter()
                         .map(|word_score| (word_score.second_word.clone(), word_score.score))
                         .collect(),
-                }
+                },
             )
         })
         .collect()
@@ -108,33 +112,33 @@ mod tests {
 
     static TESTDATA: &str = "I am a fish. No, wait, I am a plant.";
 
-#[test]
-fn test_parse_file() {
-    let words = parse_file(TESTDATA);
-    assert_eq!(words.join(" "), "i am a fish no wait i am a plant");
-}
+    #[test]
+    fn test_parse_file() {
+        let words = parse_file(TESTDATA);
+        assert_eq!(words.join(" "), "i am a fish no wait i am a plant");
+    }
 
-#[test]
-fn test_alice() {
-    let words = parse_file(include_str!("alice.txt"));
-    let unique_words = get_unique_words(&words);
-    let two_grams = generate_scores(&words);
-    let word_predictions = keyval_hashmap_to_wordprediction_hashmap(unique_words, two_grams);
-    let word_a = word_predictions.get("a").unwrap();
-    assert_eq!(word_a.word, "a");
-    assert_eq!(word_a.predictions.len(), 37);    
-    assert_eq!(word_predictions.len(), 610);
-}
+    #[test]
+    fn test_alice() {
+        let words = parse_file(include_str!("alice.txt"));
+        let unique_words = get_unique_words(&words);
+        let two_grams = generate_scores(&words);
+        let word_predictions = keyval_hashmap_to_wordprediction_hashmap(unique_words, two_grams);
+        let word_a = word_predictions.get("a").unwrap();
+        assert_eq!(word_a.word, "a");
+        assert_eq!(word_a.predictions.len(), 37);
+        assert_eq!(word_predictions.len(), 610);
+    }
 
-#[test]
-fn test_bible_parser() {
-    let words = parse_file(include_str!("10900-8.txt"));
-    assert_eq!(words.len(), 858338);
-    let unique_words = get_unique_words(&words);
-    let two_grams = generate_scores(&words);
-    let word_predictions = keyval_hashmap_to_wordprediction_hashmap(unique_words, two_grams);
-    let word_a = word_predictions.get("a").unwrap();
-    assert_eq!(word_a.word, "a");
-    assert_eq!(word_a.predictions.len(), 1335);
-}
+    #[test]
+    fn test_bible_parser() {
+        let words = parse_file(include_str!("10900-8.txt"));
+        assert_eq!(words.len(), 858338);
+        let unique_words = get_unique_words(&words);
+        let two_grams = generate_scores(&words);
+        let word_predictions = keyval_hashmap_to_wordprediction_hashmap(unique_words, two_grams);
+        let word_a = word_predictions.get("a").unwrap();
+        assert_eq!(word_a.word, "a");
+        assert_eq!(word_a.predictions.len(), 1335);
+    }
 }
