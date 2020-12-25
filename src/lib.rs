@@ -8,15 +8,14 @@ pub struct WordPredictions {
     word: String,
     predictions: Vec<(String, usize)>,
 }
+
+static SEPARATOR: char = '§';
+
 impl fmt::Display for WordPredictions {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        let predictions = self.predictions
-            .iter()
-            .map(
-                |p| format!("{} ({})", p.0, p.1
-            ))
-            .collect::<Vec<String>>()
-            .join(", ");
+        let predictions = self.predictions.iter()
+            .map(|p| format!("{} ({})", p.0, p.1))
+            .collect::<Vec<String>>().join(", ");
         write!(
             f,
             "Word: *{}*. Predictions: {}",
@@ -49,9 +48,8 @@ fn generate_scores(words: &[String]) -> Vec<WordScore> {
     words
         .windows(2)
         .map(
-            |pair| format!("{}§{}", pair[0], pair[1])
-        )
-        .for_each(
+            |pair| format!("{}{}{}", pair[0], SEPARATOR, pair[1])
+        ).for_each(
             |key| *prediction_map.entry(key).or_insert(0) += 1
         );
     // At least only do this ONCE
@@ -59,7 +57,7 @@ fn generate_scores(words: &[String]) -> Vec<WordScore> {
 }
 
 fn prediction_tuple_to_word_score(item: (&String, &usize)) -> WordScore {
-    let mut split = item.0.split("§");
+    let mut split = item.0.split(SEPARATOR);
     let word = split.next().unwrap().to_string();
     let second_word = split.next().unwrap().to_string();
     WordScore {
@@ -69,9 +67,9 @@ fn prediction_tuple_to_word_score(item: (&String, &usize)) -> WordScore {
     }
 }
 
-fn get_unique_words(words: &Vec<String>) -> Vec<String> {
+fn get_unique_words(words: &[String]) -> Vec<String> {
     println!("Deduping {} words", words.len());
-    let mut words_sorted = words.clone();
+    let mut words_sorted = words.to_owned();
     words_sorted.sort();
     words_sorted.dedup();
     words_sorted
