@@ -85,9 +85,9 @@ mod tests {
         let scores = generate_scores(&words);
         let word_predictions = group_wordpredictions(scores);
         let word_a = word_predictions.get("a").unwrap();
-        assert_eq!(word_a.len(), 6138);
+        assert_eq!(word_a.len(), 608);
         assert_eq!(word_a[0].0, "small");
-        assert_eq!(word_predictions.len(), 610);
+        assert_eq!(word_predictions.len(), 6138);
     }
 
     #[test]
