@@ -1,5 +1,4 @@
 #![feature(map_into_keys_values)]
-use rayon::prelude::*;
 use regex::Regex;
 use std::collections::HashMap;
 
