@@ -2,7 +2,16 @@
 use regex::Regex;
 use std::collections::HashMap;
 
-pub fn parse_file(s: &str) -> Vec<String> {
+#[derive(Clone)]
+pub struct WordProposal(String, usize);
+#[derive(Clone, PartialEq, Eq, Hash)]
+struct WordSequence(String, String);
+
+pub fn generate_ngrams(text: &str) -> HashMap<String, Vec<WordProposal>> {
+    group_wordpredictions(generate_scores(&parse_file(text)))
+}
+
+fn parse_file(s: &str) -> Vec<String> {
     println!("Parsing a file of {} characters", s.len());
     let re = Regex::new(r"\w+").unwrap();
     re.find_iter(s)
@@ -11,36 +20,37 @@ pub fn parse_file(s: &str) -> Vec<String> {
                 w.as_str()
                     .to_lowercase() // Should this be optional?
                     .replace("_", "") // It's an Alice thing
-                    .replace("_", "")
-            }, // Closing too
+                    .replace("_", "") // Closing too
+            }, //
         )
         .collect()
 }
 
-fn generate_scores(words: &[String]) -> HashMap<(String, String), usize> {
+fn generate_scores(words: &[String]) -> HashMap<WordSequence, usize> {
     println!("Generating scores for {} sequences", words.len());
-    let mut prediction_map: HashMap<(String, String), usize> = HashMap::new();
-    words.windows(2).for_each(|pair| {
+    let mut prediction_map: HashMap<WordSequence, usize> = HashMap::new();
+    words.windows(2).for_each(|word_sequence| {
         *prediction_map
-            .entry((pair[0].clone(), pair[1].clone()))
+            .entry(WordSequence(word_sequence[0].clone(), word_sequence[1].clone()))
             .or_insert(0) += 1;
     });
     prediction_map
 }
 
 fn group_wordpredictions(
-    predictions_hm: HashMap<(String, String), usize>,
-) -> HashMap<String, Vec<(String, usize)>> {
-    let mut hm: HashMap<String, Vec<(String, usize)>> = HashMap::new();
-    for ((first_word, second_word), score) in predictions_hm {
-        let entry = hm.entry(first_word).or_insert(vec![]);
-        entry.push((second_word, score));
+    predictions_hm: HashMap<WordSequence, usize>,
+) -> HashMap<String, Vec<WordProposal>> {
+    let mut hm: HashMap<String, Vec<WordProposal>> = HashMap::new();
+    for (word_sequence, score) in predictions_hm {
+        hm.entry(word_sequence.0)
+            .or_insert(vec![])
+            .push(WordProposal(word_sequence.1, score));
     }
-    // Sort the items by score
+    // Sort the items by score descending
     hm.into_iter()
         .map(|(first_word, arr)| {
             let mut sorted = arr.clone();
-            sorted.sort_by(|(_a1, a2), (_b1, b2)| b2.cmp(a2));
+            sorted.sort_by(|a, b| b.1.cmp(&a.1));
             (first_word, sorted)
         })
         .collect()
@@ -75,7 +85,7 @@ mod tests {
         let scores = generate_scores(&words);
         let word_predictions = group_wordpredictions(scores);
         let word_a = word_predictions.get("a").unwrap();
-        assert_eq!(word_a.len(), 608);
+        assert_eq!(word_a.len(), 6138);
         assert_eq!(word_a[0].0, "small");
         assert_eq!(word_predictions.len(), 610);
     }
