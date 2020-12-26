@@ -37,13 +37,13 @@ fn group_wordpredictions(
         entry.push((second_word, score));
     }
     // Sort the items by score
-    let mut hm_sorted: HashMap<String, Vec<(String, usize)>> = HashMap::new();
-    for (first_word, arr) in hm {
-        let mut sorted = arr.clone();
-        sorted.sort_by(|(_a1, a2), (_b1, b2)| b2.cmp(a2));
-        hm_sorted.insert(first_word, sorted);
-    }
-    hm_sorted
+    hm.into_iter()
+        .map(|(first_word, arr)| {
+            let mut sorted = arr.clone();
+            sorted.sort_by(|(_a1, a2), (_b1, b2)| b2.cmp(a2));
+            (first_word, sorted)
+        })
+        .collect()
 }
 
 #[cfg(test)]
@@ -75,15 +75,8 @@ mod tests {
         let scores = generate_scores(&words);
         let word_predictions = group_wordpredictions(scores);
         let word_a = word_predictions.get("a").unwrap();
-        println!(
-            "{}",
-            word_a
-                .iter()
-                .map(|(w, s)| format!("{}:{}", w, s))
-                .collect::<Vec<String>>()
-                .join(",")
-        );
-        assert_eq!(word_a.len(), 37);
+        assert_eq!(word_a.len(), 608);
+        assert_eq!(word_a[0].0, "small");
         assert_eq!(word_predictions.len(), 610);
     }
 
