@@ -5,14 +5,14 @@ use std::collections::HashMap;
 #[derive(Clone)]
 pub struct WordProposal(String, usize);
 #[derive(Clone, PartialEq, Eq, Hash)]
-struct WordSequence(String, String);
+pub struct WordSequence(String, String);
 
 pub fn generate_ngrams(text: &str) -> HashMap<String, Vec<WordProposal>> {
     group_wordpredictions(generate_scores(&parse_file(text)))
 }
 
-fn parse_file(s: &str) -> Vec<String> {
-    println!("Parsing a file of {} characters", s.len());
+pub fn parse_file(s: &str) -> Vec<String> {
+    // println!("Parsing a file of {} characters", s.len());
     let re = Regex::new(r"\w+").unwrap();
     re.find_iter(s)
         .map(
@@ -26,8 +26,8 @@ fn parse_file(s: &str) -> Vec<String> {
         .collect()
 }
 
-fn generate_scores(words: &[String]) -> HashMap<WordSequence, usize> {
-    println!("Generating scores for {} sequences", words.len());
+pub fn generate_scores(words: &[String]) -> HashMap<WordSequence, usize> {
+    // println!("Generating scores for {} sequences", words.len());
     let mut prediction_map: HashMap<WordSequence, usize> = HashMap::new();
     words.windows(2).for_each(|word_sequence| {
         *prediction_map
@@ -37,7 +37,7 @@ fn generate_scores(words: &[String]) -> HashMap<WordSequence, usize> {
     prediction_map
 }
 
-fn group_wordpredictions(
+pub fn group_wordpredictions(
     predictions_hm: HashMap<WordSequence, usize>,
 ) -> HashMap<String, Vec<WordProposal>> {
     let mut hm: HashMap<String, Vec<WordProposal>> = HashMap::new();
