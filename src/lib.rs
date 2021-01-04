@@ -1,5 +1,6 @@
 #![feature(map_into_keys_values)]
 use std::collections::HashMap;
+use rayon::prelude::*;
 
 #[derive(Clone)]
 pub struct WordProposal(String, usize);
@@ -12,7 +13,8 @@ pub fn generate_ngrams(text: &str) -> HashMap<String, Vec<WordProposal>> {
 
 pub fn parse_file(s: &str) -> Vec<Vec<String>> {
     s
-        .split(|c: char| c.is_ascii_punctuation())
+        .as_parallel_string()
+        .par_split(|c: char| c.is_ascii_punctuation())
         .map(|s| {
             s
                 .split_whitespace()
