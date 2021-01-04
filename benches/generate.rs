@@ -19,14 +19,14 @@ fn criterion_generate_scores(c: &mut Criterion) {
     let bible = include_str!("../src/10900-8.txt");
     let words = parse_file(bible);
     c.bench_function("generate_scores for bible", |b| {
-        b.iter(|| generate_scores(black_box(&words)))
+        b.iter(|| generate_scores(black_box(words.clone())))
     });
 }
 
 fn criterion_group_wordpredictions(c: &mut Criterion) {
     let bible = include_str!("../src/10900-8.txt");
     let words = parse_file(bible);
-    let scores = generate_scores(&words);
+    let scores = generate_scores(words);
 
     c.bench_function("group_wordpredictions for bible", |b| {
         b.iter(|| group_wordpredictions(black_box(scores.clone())))

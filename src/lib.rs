@@ -1,5 +1,4 @@
 #![feature(map_into_keys_values)]
-use regex::Regex;
 use std::collections::HashMap;
 
 #[derive(Clone)]
@@ -8,29 +7,33 @@ pub struct WordProposal(String, usize);
 pub struct WordSequence(String, String);
 
 pub fn generate_ngrams(text: &str) -> HashMap<String, Vec<WordProposal>> {
-    group_wordpredictions(generate_scores(&parse_file(text)))
+    group_wordpredictions(generate_scores(parse_file(text)))
 }
 
-pub fn parse_file(s: &str) -> Vec<String> {
-    // println!("Parsing a file of {} characters", s.len());
-    let re = Regex::new(r"\w+").unwrap();
-    re.find_iter(s)
-        .map(
-            |w| {
-                w.as_str()
-                    .to_lowercase()
-            },
-        )
+pub fn parse_file(s: &str) -> Vec<Vec<String>> {
+    s
+        .split(|c: char| c.is_ascii_punctuation())
+        .map(|s| {
+            s
+                .split_whitespace()
+                .map(
+                    |w| {
+                        w.to_lowercase()
+                    }
+                )
+                .collect()
+        })
         .collect()
 }
 
-pub fn generate_scores(words: &[String]) -> HashMap<WordSequence, usize> {
-    // println!("Generating scores for {} sequences", words.len());
+pub fn generate_scores(sentences: Vec<Vec<String>>) -> HashMap<WordSequence, usize> {
     let mut prediction_map: HashMap<WordSequence, usize> = HashMap::new();
-    words.windows(2).for_each(|word_sequence| {
-        *prediction_map
-            .entry(WordSequence(word_sequence[0].clone(), word_sequence[1].clone()))
-            .or_insert(0) += 1;
+    sentences.iter().for_each(|sentence| {
+        sentence.windows(2).for_each(|word_sequence| {
+            *prediction_map
+                .entry(WordSequence(word_sequence[0].clone(), word_sequence[1].clone()))
+                .or_insert(0) += 1;
+        });
     });
     prediction_map
 }
@@ -62,29 +65,32 @@ mod tests {
 
     #[test]
     fn test_parse_file() {
-        let words = parse_file(TESTDATA);
-        assert_eq!(words.join(" "), "i am a fish no wait i am a plant");
+        let sentences = parse_file(TESTDATA);
+        assert_eq!(sentences[0].join(" "), "i am a fish");
+        assert_eq!(sentences[1].join(" "), "no");
+        assert_eq!(sentences[2].join(" "), "wait");
+        assert_eq!(sentences[3].join(" "), "i am a plant");
     }
 
     #[test]
     fn test_hhgttg() {
         let words = parse_file(include_str!("hhgttg.txt"));
-        let scores = generate_scores(&words);
+        let scores = generate_scores(words);
         let word_predictions = group_wordpredictions(scores);
         let word_a = word_predictions.get("a").unwrap();
-        assert_eq!(word_a.len(), 608);
+        assert_eq!(word_a.len(), 605);
         assert_eq!(word_a[0].0, "small");
-        assert_eq!(word_predictions.len(), 6138);
+        assert_eq!(word_predictions.len(), 5595);
     }
 
     #[test]
     fn test_bible_parser() {
         let words = parse_file(include_str!("10900-8.txt"));
-        assert_eq!(words.len(), 858338);
-        let scores = generate_scores(&words);
+        assert_eq!(words.len(), 157387);
+        let scores = generate_scores(words);
         let word_predictions = group_wordpredictions(scores);
         let word_a = word_predictions.get("a").unwrap();
-        assert_eq!(word_a.len(), 1335);
+        assert_eq!(word_a.len(), 1333);
         assert_eq!(word_a[0].0, "man");
     }
 }
