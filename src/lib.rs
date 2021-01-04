@@ -18,10 +18,8 @@ pub fn parse_file(s: &str) -> Vec<String> {
         .map(
             |w| {
                 w.as_str()
-                    .to_lowercase() // Should this be optional?
-                    .replace("_", "") // It's an Alice thing
-                    .replace("_", "") // Closing too
-            }, //
+                    .to_lowercase()
+            },
         )
         .collect()
 }
@@ -66,17 +64,6 @@ mod tests {
     fn test_parse_file() {
         let words = parse_file(TESTDATA);
         assert_eq!(words.join(" "), "i am a fish no wait i am a plant");
-    }
-
-    #[test]
-    fn test_alice() {
-        let words = parse_file(include_str!("alice.txt"));
-        let scores = generate_scores(&words);
-        let word_predictions = group_wordpredictions(scores);
-        let word_a = word_predictions.get("a").unwrap();
-        assert_eq!(word_a.len(), 37);
-        assert_eq!(word_predictions.len(), 610);
-        assert_eq!(word_a[0].0, "little");
     }
 
     #[test]
