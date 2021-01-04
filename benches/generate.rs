@@ -1,13 +1,6 @@
 use criterion::{black_box, criterion_group, criterion_main, Criterion};
 use twograms::{generate_ngrams, generate_scores, group_wordpredictions, parse_file};
 
-fn criterion_generate(c: &mut Criterion) {
-    let bible = include_str!("../src/10900-8.txt");
-    c.bench_function("Generate for bible", |b| {
-        b.iter(|| generate_ngrams(black_box(bible)))
-    });
-}
-
 fn criterion_parse(c: &mut Criterion) {
     let bible = include_str!("../src/10900-8.txt");
     c.bench_function("parse_file for bible", |b| {
@@ -33,11 +26,18 @@ fn criterion_group_wordpredictions(c: &mut Criterion) {
     });
 }
 
+fn criterion_generate(c: &mut Criterion) {
+    let bible = include_str!("../src/10900-8.txt");
+    c.bench_function("Generate for bible", |b| {
+        b.iter(|| generate_ngrams(black_box(bible)))
+    });
+}
+
 criterion_group!(
     benches,
-    criterion_generate,
     criterion_parse,
     criterion_generate_scores,
-    criterion_group_wordpredictions
+    criterion_group_wordpredictions,
+    criterion_generate,
 );
 criterion_main!(benches);
