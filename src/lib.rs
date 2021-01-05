@@ -1,6 +1,6 @@
 #![feature(map_into_keys_values)]
-use std::collections::HashMap;
 use rayon::prelude::*;
+use std::collections::HashMap;
 
 #[derive(Clone)]
 pub struct WordProposal(String, usize);
@@ -12,19 +12,9 @@ pub fn generate_ngrams(text: &str) -> HashMap<String, Vec<WordProposal>> {
 }
 
 pub fn parse_file(s: &str) -> Vec<Vec<String>> {
-    s
-        .as_parallel_string()
+    s.as_parallel_string()
         .par_split(|c: char| c.is_ascii_punctuation())
-        .map(|s| {
-            s
-                .split_whitespace()
-                .map(
-                    |w| {
-                        w.to_lowercase()
-                    }
-                )
-                .collect()
-        })
+        .map(|s| s.split_whitespace().map(|w| w.to_lowercase()).collect())
         .collect()
 }
 
@@ -33,7 +23,10 @@ pub fn generate_scores(sentences: Vec<Vec<String>>) -> HashMap<WordSequence, usi
     sentences.iter().for_each(|sentence| {
         sentence.windows(2).for_each(|word_sequence| {
             *prediction_map
-                .entry(WordSequence(word_sequence[0].clone(), word_sequence[1].clone()))
+                .entry(WordSequence(
+                    word_sequence[0].clone(),
+                    word_sequence[1].clone(),
+                ))
                 .or_insert(0) += 1;
         });
     });
