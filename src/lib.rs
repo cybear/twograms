@@ -1,4 +1,3 @@
-#![feature(map_into_keys_values)]
 use rayon::prelude::*;
 use serde::Serialize;
 use std::collections::HashMap;
