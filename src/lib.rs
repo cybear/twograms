@@ -1,11 +1,17 @@
 #![feature(map_into_keys_values)]
 use rayon::prelude::*;
+use serde::Serialize;
 use std::collections::HashMap;
 
-#[derive(Clone)]
+#[derive(Clone, Serialize, Debug)]
 pub struct WordProposal(String, usize);
-#[derive(Clone, PartialEq, Eq, Hash)]
+#[derive(Clone, PartialEq, Eq, Hash, Serialize, Debug)]
 pub struct WordSequence(String, String);
+
+pub fn to_json(text: &str) -> String {
+    let ngrams = generate_ngrams(text);
+    serde_json::to_string(&ngrams).unwrap()
+}
 
 pub fn generate_ngrams(text: &str) -> HashMap<String, Vec<WordProposal>> {
     group_wordpredictions(generate_scores(parse_file(text)))
