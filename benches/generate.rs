@@ -33,11 +33,14 @@ fn criterion_generate(c: &mut Criterion) {
     });
 }
 
-criterion_group!(
-    benches,
-    criterion_parse,
-    criterion_generate_scores,
-    criterion_group_wordpredictions,
-    criterion_generate,
-);
+criterion_group!{
+    name = benches;
+    config = Criterion::default().sample_size(20);
+    targets = 
+        criterion_parse,
+        criterion_generate,
+        criterion_generate_scores,
+        criterion_group_wordpredictions,
+}
+
 criterion_main!(benches);
