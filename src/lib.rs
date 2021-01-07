@@ -75,7 +75,7 @@ mod tests {
 
     #[test]
     fn test_hhgttg() {
-        let words = parse_file(include_str!("hhgttg.txt"));
+        let words = parse_file(include_str!("../benches/hhgttg.txt"));
         let scores = generate_scores(words);
         let word_predictions = group_wordpredictions(scores, 1000000);
         let word_a = word_predictions.get("a").unwrap();
@@ -86,7 +86,7 @@ mod tests {
 
     #[test]
     fn test_bible_parser() {
-        let words = parse_file(include_str!("10900-8.txt"));
+        let words = parse_file(include_str!("../benches/10900-8.txt"));
         assert_eq!(words.len(), 157387);
         let scores = generate_scores(words);
         let word_predictions = group_wordpredictions(scores, 1000000);
