@@ -9,7 +9,7 @@ fn main() {
         eprintln!(
             "       <filename>           The text file used to generate the n-grams structure"
         );
-        eprintln!("       [<max-suggestions>]  An optional number between 1-5");
+        eprintln!("       [<max-suggestions>]  Optional number, how many suggestions to keep for each word");
         process::exit(1);
     });
 
