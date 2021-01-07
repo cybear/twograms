@@ -5,11 +5,11 @@ mod lib;
 fn main() {
     let config = Config::new(env::args()).unwrap_or_else(|err| {
         eprintln!("Problem parsing arguments: {}", err);
-        println!("usage: twograms <filename> [<max-suggestions>]");
-        println!(
+        eprintln!("usage: twograms <filename> [<max-suggestions>]");
+        eprintln!(
             "       <filename>           The text file used to generate the n-grams structure"
         );
-        println!("       [<max-suggestions>]  An optional number between 1-5");
+        eprintln!("       [<max-suggestions>]  An optional number between 1-5");
         process::exit(1);
     });
 
@@ -42,15 +42,8 @@ impl Config {
             None => return Err("Didn't get a file name"),
         };
         let keep = match args.next() {
-            Some(arg) => match arg.as_str() {
-                "1" => 1,
-                "2" => 2,
-                "3" => 3,
-                "4" => 4,
-                "5" => 5,
-                _ => 0,
-            },
-            None => 0,
+            Some(arg) => arg.parse().unwrap(),
+            None => 100000,
         };
 
         Ok(Config { filename, keep })
