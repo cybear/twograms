@@ -1,19 +1,13 @@
 use rayon::prelude::*;
 use serde::Serialize;
 use std::collections::HashMap;
-
 #[derive(Clone, Serialize, Debug)]
 pub struct WordProposal(String, usize);
 #[derive(Clone, PartialEq, Eq, Hash, Serialize, Debug)]
 pub struct WordSequence(String, String);
 
-pub fn to_json(text: &str) -> String {
-    let ngrams = generate_ngrams(text);
-    serde_json::to_string(&ngrams).unwrap()
-}
-
-pub fn generate_ngrams(text: &str) -> HashMap<String, Vec<WordProposal>> {
-    group_wordpredictions(generate_scores(parse_file(text)))
+pub fn generate_ngrams(text: &str, keep: usize) -> HashMap<String, Vec<WordProposal>> {
+    group_wordpredictions(generate_scores(parse_file(text)), keep)
 }
 
 pub fn parse_file(s: &str) -> Vec<Vec<String>> {
@@ -40,6 +34,7 @@ pub fn generate_scores(sentences: Vec<Vec<String>>) -> HashMap<WordSequence, usi
 
 pub fn group_wordpredictions(
     predictions_hm: HashMap<WordSequence, usize>,
+    keep: usize,
 ) -> HashMap<String, Vec<WordProposal>> {
     let mut hm: HashMap<String, Vec<WordProposal>> = HashMap::new();
     for (word_sequence, score) in predictions_hm {
@@ -52,6 +47,12 @@ pub fn group_wordpredictions(
         .map(|(first_word, arr)| {
             let mut sorted = arr.clone();
             sorted.sort_by(|a, b| b.1.cmp(&a.1));
+            if sorted.len() > keep {
+                sorted.resize(
+                    keep,
+                    WordProposal("foo".into(), 0), // This is never used
+                );
+            }
             (first_word, sorted)
         })
         .collect()
@@ -76,7 +77,7 @@ mod tests {
     fn test_hhgttg() {
         let words = parse_file(include_str!("hhgttg.txt"));
         let scores = generate_scores(words);
-        let word_predictions = group_wordpredictions(scores);
+        let word_predictions = group_wordpredictions(scores, 1000000);
         let word_a = word_predictions.get("a").unwrap();
         assert_eq!(word_a.len(), 605);
         assert_eq!(word_a[0].0, "small");
@@ -88,7 +89,7 @@ mod tests {
         let words = parse_file(include_str!("10900-8.txt"));
         assert_eq!(words.len(), 157387);
         let scores = generate_scores(words);
-        let word_predictions = group_wordpredictions(scores);
+        let word_predictions = group_wordpredictions(scores, 1000000);
         let word_a = word_predictions.get("a").unwrap();
         assert_eq!(word_a.len(), 1333);
         assert_eq!(word_a[0].0, "man");
