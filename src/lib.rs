@@ -22,7 +22,7 @@ pub fn parse_file(s: &str) -> impl Iterator<Item=Vec<String>> + '_ {
 
 pub fn generate_scores(sentences: impl Iterator<Item=Vec<String>>) -> HashMap<WordSequence, usize> {
     let mut prediction_map: HashMap<WordSequence, usize> = HashMap::new();
-    sentences.for_each(|sentence| {
+    for sentence in sentences {
         sentence.windows(2).for_each(|word_sequence| {
             *prediction_map
                 .entry(WordSequence(
@@ -31,7 +31,7 @@ pub fn generate_scores(sentences: impl Iterator<Item=Vec<String>>) -> HashMap<Wo
                 ))
                 .or_insert(0) += 1;
         });
-    });
+    }
     prediction_map
 }
 
