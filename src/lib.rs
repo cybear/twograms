@@ -92,7 +92,6 @@ mod tests {
     #[test]
     fn test_bible_parser() {
         let words = parse_file(include_str!("../benches/10900-8.txt"));
-        // assert_eq!(words.collect().len(), 157387);
         let scores = generate_scores(words);
         let word_predictions = group_wordpredictions(scores, 1000000);
         let word_a = word_predictions.get("a").unwrap();
