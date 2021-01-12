@@ -7,12 +7,16 @@ pub fn generate_ngrams<'a>(text: &'a str, keep: usize) -> HashMap<&'a str, Vec<(
 fn parse_line<'a>(s: &'a str) -> Vec<&'a str> {
     s
         .split(|c: char| c.is_whitespace())
+        .map(|word| word.trim())
+        .filter(|word| word.len() > 0)
         .collect()
 }
 
 pub fn parse_file<'a>(s: &'a str) -> Vec<&'a str> {
     s
     .split(|c: char| c.is_ascii_punctuation())
+    .map(|sentence| sentence.trim())
+    .filter(|sentence| sentence.len() > 0)
     .collect()
 }
 
@@ -80,9 +84,9 @@ mod tests {
         let scores = generate_scores(words);
         let word_predictions = group_wordpredictions(scores, 1000000);
         let word_a = word_predictions.get("a").unwrap();
-        assert_eq!(word_a.len(), 564);
+        assert_eq!(word_a.len(), 585);
         assert_eq!(word_a[0].0, "small");
-        assert_eq!(word_predictions.len(), 5595);
+        assert_eq!(word_predictions.len(), 6045);
     }
 
     #[test]
@@ -92,7 +96,7 @@ mod tests {
         let scores = generate_scores(words);
         let word_predictions = group_wordpredictions(scores, 1000000);
         let word_a = word_predictions.get("a").unwrap();
-        assert_eq!(word_a.len(), 1281);
+        assert_eq!(word_a.len(), 1333);
         assert_eq!(word_a[0].0, "man");
     }
 }
