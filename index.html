@@ -1,0 +1,127 @@
+<html>
+  <head>
+    <meta content="text/html;charset=utf-8" http-equiv="Content-Type"/>
+    <style>
+        fieldset {
+            background: #ffe;
+            border: none;
+            margin: 1rem;
+            max-width: 500px;
+        }
+        #input {
+          border: 1px solid #000;
+          font-size: 2rem;
+          padding: 1rem;
+        }
+    </style>
+  </head>
+  <body>
+
+    <fieldset>
+        <label>Data for learning suggestions</label>
+        <br />
+        <textarea id="data" rows="10" cols="50">Hello, everymeow.
+
+How are you? Fine, thank you.
+
+Oh, my god!
+
+I wish I were a bird.
+
+Why're ya talkin' in English?
+
+My daughter is going to America.
+
+If you were a bird?
+
+I am not a bird. I am a cat!
+
+If I were not a cat, just what would you say I am?
+        </textarea>
+    </fieldset>
+    
+    <fieldset>
+        <label>Write a word to see suggestions</label>
+        <br />
+        <input type="text" id="input" />
+    </fieldset>
+
+    <fieldset>
+        <label>Suggestions</label>
+        <br />
+        <ul id="suggestions">
+
+        </ul>
+    </fieldset>
+    <!-- Note the usage of `type=module` here as this is an ES6 module -->
+    <script type="module">
+      // Use ES module import syntax to import functionality from the module
+      // that we have compiled.
+      //
+      // Note that the `default` import is an initialization function which
+      // will "boot" the module and make it ready to use. Currently browsers
+      // don't support natively imported WebAssembly as an ES module, but
+      // eventually the manual initialization won't be required!
+      import init, { to_json } from './pkg/twograms.js';
+
+      async function run() {
+        // First up we need to actually load the wasm file, so we use the
+        // default export to inform it where the wasm file is located on the
+        // server, and then we wait on the returned promise to wait for the
+        // wasm to be loaded.
+        //
+        // It may look like this: `await init('./pkg/without_a_bundler_bg.wasm');`,
+        // but there is also a handy default inside `init` function, which uses
+        // `import.meta` to locate the wasm file relatively to js file.
+        //
+        // Note that instead of a string you can also pass in any of the
+        // following things:
+        //
+        // * `WebAssembly.Module`
+        //
+        // * `ArrayBuffer`
+        //
+        // * `Response`
+        //
+        // * `Promise` which returns any of the above, e.g. `fetch("./path/to/wasm")`
+        //
+        // This gives you complete control over how the module is loaded
+        // and compiled.
+        //
+        // Also note that the promise, when resolved, yields the wasm module's
+        // exports which is the same as importing the `*_bg` module in other
+        // modes
+        console.time('init');
+        await init();
+        console.timeEnd('init');
+
+        // And afterwards we can use all the functionality defined in wasm.
+        const dataEl = document.querySelector('#data');
+        const inputEl = document.querySelector('#input');
+        const suggestionsEl = document.querySelector('#suggestions');
+
+        let result = to_json(dataEl.value);
+        console.log(`result ${result.get('I')}`);
+
+        dataEl.addEventListener('change', () => {
+            console.time('Regenerating');
+            result = to_json(dataEl.value);
+            console.timeEnd('Regenerating');
+        });
+        inputEl.addEventListener('keyup', () => {
+            let response = result.get(inputEl.value);
+            console.log('querying for', inputEl.value, response);
+            const html = response
+                ? response
+                    .map(proposal => `<li>${proposal[0]} ${proposal[1]}</li>`)
+                    .join('')
+                : 'No results';
+                suggestionsEl.innerHTML = html;
+        });
+      }
+
+      run();
+    </script>
+  </body>
+</html>
+
