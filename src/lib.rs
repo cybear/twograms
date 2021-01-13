@@ -1,4 +1,14 @@
 use std::collections::HashMap;
+extern crate wasm_bindgen;
+use wasm_bindgen::prelude::*;
+use serde_wasm_bindgen::{to_value};
+
+#[wasm_bindgen]
+pub fn to_json(text: String) -> JsValue {
+    let ngrams = generate_ngrams(&text, 5);
+    to_value(&ngrams).unwrap()
+}
+
 
 pub fn generate_ngrams<'a>(text: &'a str, keep: usize) -> HashMap<&'a str, Vec<(&'a str, usize)>> {
     group_wordpredictions(generate_scores(parse_file(text)), keep)

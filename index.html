@@ -1,0 +1,92 @@
+<html>
+  <head>
+    <meta content="text/html;charset=utf-8" http-equiv="Content-Type"/>
+    <style>
+        fieldset {
+            background: #ffe;
+            border: none;
+            margin: 1rem;
+            max-width: 500px;
+        }
+        #input {
+          border: 1px solid #000;
+          font-size: 2rem;
+          padding: 1rem;
+        }
+    </style>
+  </head>
+  <body>
+
+    <fieldset>
+        <label>Data for learning suggestions</label>
+        <br />
+        <textarea id="data" rows="10" cols="50">Hello, everymeow.
+How are you? Fine, thank you.
+Oh, my god!
+I wish I were a bird.
+Why're ya talkin' in English?
+My daughter is going to America.
+If you were a bird?
+I am not a bird. I am a cat!
+If I were not a cat, just what would you say I am?
+        </textarea>
+    </fieldset>
+    
+    <fieldset>
+        <label>Write a word to see suggestions</label>
+        <br />
+        <input type="text" id="input" />
+    </fieldset>
+
+    <fieldset>
+        <label>Suggestions</label>
+        <br />
+        <ul id="suggestions">
+        </ul>
+    </fieldset>
+    <!-- Note the usage of `type=module` here as this is an ES6 module -->
+    <script type="module">
+      import init, { to_json } from './pkg/twograms.js';
+      import js_generate from './web/twograms.comparison.js';
+
+      async function run() {
+        console.time('init');
+        await init();
+        console.timeEnd('init');
+
+        // And afterwards we can use all the functionality defined in wasm.
+        const dataEl = document.querySelector('#data');
+        const inputEl = document.querySelector('#input');
+        const suggestionsEl = document.querySelector('#suggestions');
+
+        let result = to_json(dataEl.value);
+        console.log(`result ${result.get('I')}`);
+
+        dataEl.addEventListener('change', () => {
+            console.time('Regenerating');
+            result = to_json(dataEl.value);
+            console.timeEnd('Regenerating');
+
+            console.time('Regenerating JS');
+            const resultJS = to_json(dataEl.value);
+            console.timeEnd('Regenerating JS');
+            
+            console.log(result);
+        });
+        inputEl.addEventListener('keyup', () => {
+            let response = result.get(inputEl.value);
+            console.log('querying for', inputEl.value, response);
+            const html = response
+                ? response
+                    .map(proposal => `<li>${proposal[0]} ${proposal[1]}</li>`)
+                    .join('')
+                : 'No results';
+                suggestionsEl.innerHTML = html;
+        });
+      }
+
+      run();
+    </script>
+  </body>
+</html>
+
