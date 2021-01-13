@@ -265,6 +265,7 @@ dependencies = [
 name = "twograms"
 version = "0.1.0"
 dependencies = [
+ "js-sys",
  "rayon",
  "serde",
  "serde-wasm-bindgen",
