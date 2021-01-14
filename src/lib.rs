@@ -1,7 +1,20 @@
 use std::collections::HashMap;
 extern crate wasm_bindgen;
+use serde::Serialize;
+use serde_wasm_bindgen::to_value;
 use wasm_bindgen::prelude::*;
-use serde_wasm_bindgen::{to_value};
+
+#[derive(Serialize, Debug, Clone)]
+pub struct WordProposal<'a>(&'a str, usize);
+#[derive(Serialize, Debug, Clone, Hash)]
+pub struct WordSequence<'a>(&'a str, &'a str);
+
+impl<'a> PartialEq for WordSequence<'a> {
+    fn eq(&self, other: &Self) -> bool {
+        self.0 == other.0 && self.1 == other.1
+    }
+}
+impl<'a> Eq for WordSequence<'a> {}
 
 #[wasm_bindgen]
 pub fn to_json(text: String) -> JsValue {
@@ -9,38 +22,30 @@ pub fn to_json(text: String) -> JsValue {
     to_value(&ngrams).unwrap()
 }
 
-
-pub fn generate_ngrams<'a>(text: &'a str, keep: usize) -> HashMap<&'a str, Vec<(&'a str, usize)>> {
+pub fn generate_ngrams<'a>(text: &'a str, keep: usize) -> HashMap<&'a str, Vec<WordProposal>> {
     group_wordpredictions(generate_scores(parse_file(text)), keep)
 }
 
 fn parse_line<'a>(s: &'a str) -> Vec<&'a str> {
-    s
-        .split(|c: char| c.is_whitespace())
+    s.split(|c: char| c.is_whitespace())
         .map(|word| word.trim())
         .filter(|word| word.len() > 0)
         .collect()
 }
 
 pub fn parse_file<'a>(s: &'a str) -> Vec<&'a str> {
-    s
-    .split(|c: char| c.is_ascii_punctuation())
-    .map(|sentence| sentence.trim())
-    .filter(|sentence| sentence.len() > 0)
-    .collect()
+    s.split(|c: char| c.is_ascii_punctuation())
+        .map(|sentence| sentence.trim())
+        .filter(|sentence| sentence.len() > 0)
+        .collect()
 }
 
-pub fn generate_scores<'a>(sentences: Vec<&'a str>) -> HashMap<(&'a str, &'a str), usize> {
-    let mut prediction_map: HashMap<(&'a str, &'a str), usize> = HashMap::new();
+pub fn generate_scores<'a>(sentences: Vec<&'a str>) -> HashMap<WordSequence<'a>, usize> {
+    let mut prediction_map = HashMap::new();
     sentences.iter().for_each(|sentence| {
-        parse_line(sentence)
-            .windows(2)
-            .for_each(|word_sequence| {
+        parse_line(sentence).windows(2).for_each(|word_sequence| {
             *prediction_map
-                .entry((
-                    &word_sequence[0],
-                    &word_sequence[1],
-                ))
+                .entry(WordSequence(&word_sequence[0], &word_sequence[1]))
                 .or_insert(0) += &1;
         });
     });
@@ -48,14 +53,14 @@ pub fn generate_scores<'a>(sentences: Vec<&'a str>) -> HashMap<(&'a str, &'a str
 }
 
 pub fn group_wordpredictions<'a>(
-    predictions_hm: HashMap<(&'a str, &'a str), usize>,
+    predictions_hm: HashMap<WordSequence<'a>, usize>,
     keep: usize,
-) -> HashMap<&'a str, Vec<(&'a str, usize)>> {
-    let mut hm: HashMap<&'a str, Vec<(&'a str, usize)>> = HashMap::new();
+) -> HashMap<&'a str, Vec<WordProposal>> {
+    let mut hm = HashMap::new();
     for (word_sequence, score) in predictions_hm {
         hm.entry(word_sequence.0)
             .or_insert(vec![])
-            .push((word_sequence.1, score));
+            .push(WordProposal(word_sequence.1, score));
     }
     // Sort the items by score descending
     hm.into_iter()
@@ -65,7 +70,7 @@ pub fn group_wordpredictions<'a>(
             if sorted.len() > keep {
                 sorted.resize(
                     keep,
-                    ("foo", 0), // This is never used
+                    WordProposal("foo", 0), // This is never used
                 );
             }
             (first_word, sorted)
