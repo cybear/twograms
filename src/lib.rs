@@ -20,6 +20,21 @@ pub mod parse {
             .filter(|sentence| sentence.len() > 0)
             .collect()
     }
+
+    #[cfg(test)]
+    mod tests {
+        use super::*;
+        static TESTDATA: &str = "I am a fish. No, wait, I am a plant.";
+
+        #[test]
+        fn test_parse_file() {
+            let sentences = parse_file(TESTDATA);
+            assert_eq!(sentences[0], "I am a fish");
+            assert_eq!(sentences[1], "No");
+            assert_eq!(sentences[2], "wait");
+            assert_eq!(sentences[3], "I am a plant");
+        }
+    }
 }
 
 pub mod generate {
@@ -91,17 +106,6 @@ pub mod generate {
 #[cfg(test)]
 mod tests {
     use super::*;
-
-    static TESTDATA: &str = "I am a fish. No, wait, I am a plant.";
-
-    #[test]
-    fn test_parse_file() {
-        let sentences = parse::parse_file(TESTDATA);
-        assert_eq!(sentences[0], "I am a fish");
-        assert_eq!(sentences[1], "No");
-        assert_eq!(sentences[2], "wait");
-        assert_eq!(sentences[3], "I am a plant");
-    }
 
     #[test]
     fn test_hhgttg() {
