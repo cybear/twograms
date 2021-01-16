@@ -14,7 +14,7 @@ fn main() {
     });
 
     if let Err(e) = run(config) {
-        println!("Application error: {}", e);
+        eprintln!("Application error: {}", e);
 
         process::exit(1);
     }
