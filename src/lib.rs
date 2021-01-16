@@ -27,7 +27,10 @@ pub mod generate {
     use serde::Serialize;
 
     #[derive(Serialize, Debug, Clone)]
-    pub struct WordProposal<'a>(&'a str, usize);
+    pub struct WordProposal<'a> {
+        pub word: &'a str,
+        pub freq: usize,
+    }
 
     #[derive(Serialize, Debug, Clone, Hash)]
     pub struct WordSequence<'a>(&'a str, &'a str);
@@ -66,17 +69,17 @@ pub mod generate {
         for (word_sequence, score) in predictions_hm {
             hm.entry(word_sequence.0)
                 .or_insert(vec![])
-                .push(WordProposal(word_sequence.1, score));
+                .push(WordProposal{word: word_sequence.1, freq: score});
         }
         // Sort the items by score descending
         hm.into_iter()
             .map(|(first_word, arr)| {
                 let mut sorted = arr.clone();
-                sorted.sort_by(|a, b| b.1.cmp(&a.1));
+                sorted.sort_by(|a, b| b.freq.cmp(&a.freq));
                 if sorted.len() > keep {
                     sorted.resize(
                         keep,
-                        WordProposal("foo", 0), // This is never used
+                        WordProposal{word: "foo", freq: 0}, // This is never used
                     );
                 }
                 (first_word, sorted)
@@ -107,7 +110,7 @@ mod tests {
         let word_predictions = generate::group_wordpredictions(scores, 1000000);
         let word_a = word_predictions.get("a").unwrap();
         assert_eq!(word_a.len(), 585);
-        assert_eq!(word_a[0].0, "small");
+        assert_eq!(word_a[0].word, "small");
         assert_eq!(word_predictions.len(), 6045);
     }
 
@@ -118,6 +121,6 @@ mod tests {
         let word_predictions = generate::group_wordpredictions(scores, 1000000);
         let word_a = word_predictions.get("a").unwrap();
         assert_eq!(word_a.len(), 1333);
-        assert_eq!(word_a[0].0, "man");
+        assert_eq!(word_a[0].word, "man");
     }
 }
