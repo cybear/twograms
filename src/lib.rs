@@ -2,6 +2,7 @@ use std::collections::HashMap;
 extern crate wasm_bindgen;
 use serde_wasm_bindgen::to_value;
 use wasm_bindgen::prelude::*;
+pub mod parse;
 
 #[wasm_bindgen]
 pub fn to_json(text: String) -> JsValue {
@@ -11,30 +12,6 @@ pub fn to_json(text: String) -> JsValue {
 
 pub fn generate_ngrams<'a>(text: &'a str, keep: usize) -> HashMap<&'a str, Vec<generate::WordProposal>> {
     generate::group_wordpredictions(generate::generate_scores(parse::parse_file(text)), keep)
-}
-
-pub mod parse {
-    pub fn parse_file<'a>(s: &'a str) -> Vec<&'a str> {
-        s.split(|c: char| c.is_ascii_punctuation())
-            .map(|sentence| sentence.trim())
-            .filter(|sentence| sentence.len() > 0)
-            .collect()
-    }
-
-    #[cfg(test)]
-    mod tests {
-        use super::*;
-        static TESTDATA: &str = "I am a fish. No, wait, I am a plant.";
-
-        #[test]
-        fn test_parse_file() {
-            let sentences = parse_file(TESTDATA);
-            assert_eq!(sentences[0], "I am a fish");
-            assert_eq!(sentences[1], "No");
-            assert_eq!(sentences[2], "wait");
-            assert_eq!(sentences[3], "I am a plant");
-        }
-    }
 }
 
 pub mod generate {
