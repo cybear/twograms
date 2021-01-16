@@ -9,6 +9,16 @@ license = "MIT"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
+[[bin]]
+name = "twograms"
+path = "src/bin/main.rs"
+
+[lib]
+name = "twograms"
+path = "src/lib.rs"
+crate-type = ["cdylib", "rlib"]
+
+
 [dependencies]
 serde = {version = "1.0", features = ["derive"]}
 serde_json = "1.0"
@@ -22,9 +32,6 @@ criterion = "0.3"
 [[bench]]
 name = "generate"
 harness = false
-
-[lib]
-crate-type = ["cdylib", "rlib"]
 
 [package.metadata.wasm-pack.profile.release]
 wasm-opt = false

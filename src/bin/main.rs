@@ -1,6 +1,6 @@
 use std::error::Error;
 use std::{env, fs, process};
-mod lib;
+use twograms::*;
 
 fn main() {
     let config = Config::new(env::args()).unwrap_or_else(|err| {
@@ -23,7 +23,7 @@ fn main() {
 fn run(config: Config) -> Result<(), Box<dyn Error>> {
     let filename = config.filename;
     let text = fs::read_to_string(filename)?;
-    let ngrams = lib::generate_ngrams(&text, config.keep);
+    let ngrams = generate_ngrams(&text, config.keep);
     let json = serde_json::to_string(&ngrams).unwrap();
     println!("{}", json);
     Ok(())
