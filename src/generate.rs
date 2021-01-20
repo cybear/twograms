@@ -18,8 +18,8 @@ impl<'a> PartialEq for WordSequence<'a> {
 impl<'a> Eq for WordSequence<'a> {}
 
 pub fn parse_line(s: &str) -> Vec<&str> {
-    s.split(|c: char| c.is_whitespace())
-        .map(|word| word.trim())
+    s.split(char::is_whitespace)
+        .map(str::trim)
         .filter(|word| !word.is_empty())
         .collect()
 }

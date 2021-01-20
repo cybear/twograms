@@ -1,6 +1,6 @@
 pub fn parse_file(s: &str) -> Vec<&str> {
     s.split(|c: char| c.is_ascii_punctuation())
-        .map(|sentence| sentence.trim())
+        .map(str::trim)
         .filter(|sentence| !sentence.is_empty())
         .collect()
 }
