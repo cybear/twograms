@@ -1,7 +1,7 @@
-pub fn parse_file<'a>(s: &'a str) -> Vec<&'a str> {
+pub fn parse_file(s: &str) -> Vec<&str> {
     s.split(|c: char| c.is_ascii_punctuation())
         .map(|sentence| sentence.trim())
-        .filter(|sentence| sentence.len() > 0)
+        .filter(|sentence| !sentence.is_empty())
         .collect()
 }
 

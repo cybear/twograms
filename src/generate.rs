@@ -17,14 +17,14 @@ impl<'a> PartialEq for WordSequence<'a> {
 }
 impl<'a> Eq for WordSequence<'a> {}
 
-pub fn parse_line<'a>(s: &'a str) -> Vec<&'a str> {
+pub fn parse_line(s: &str) -> Vec<&str> {
     s.split(|c: char| c.is_whitespace())
         .map(|word| word.trim())
-        .filter(|word| word.len() > 0)
+        .filter(|word| !word.is_empty())
         .collect()
 }
 
-pub fn generate_scores<'a>(sentences: Vec<&'a str>) -> HashMap<WordSequence<'a>, usize> {
+pub fn generate_scores(sentences: Vec<&str>) -> HashMap<WordSequence, usize> {
     let mut prediction_map = HashMap::new();
     sentences.iter().for_each(|sentence| {
         parse_line(sentence).windows(2).for_each(|word_sequence| {
@@ -43,7 +43,7 @@ pub fn group_wordpredictions<'a>(
     let mut hm = HashMap::new();
     for (word_sequence, score) in predictions_hm {
         hm.entry(word_sequence.0)
-            .or_insert(vec![])
+            .or_insert_with(Vec::new)
             .push(WordProposal {
                 word: word_sequence.1,
                 freq: score,

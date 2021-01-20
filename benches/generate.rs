@@ -1,5 +1,5 @@
 use criterion::{black_box, criterion_group, criterion_main, Criterion};
-use twograms::{generate_ngrams, generate, parse};
+use twograms::{generate, generate_ngrams, parse};
 
 fn criterion_parse(c: &mut Criterion) {
     let bible = include_str!("10900-8.txt");
